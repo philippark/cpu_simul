@@ -18,12 +18,17 @@ double next_exp(double lambda, double upper_bound){
 
 int main(int argc, char** argv){
 
-    int n = 3;
-    int n_cpu = 1;
-    double seed = 32;
-    double lambda = 0.001;
-    double upper_bound = 1024;
+    if (argc != 6){
+        fprintf(stderr, "%s", "Non-valid arguments");
+    }
 
+    int n = atoi(*(argv+1));
+    int n_cpu = atoi(*(argv+2));
+    double seed = atof(*(argv+3));
+    double lambda = atof(*(argv+4));
+    double upper_bound = atof(*(argv+5));
+
+    printf("%f\n", upper_bound);
     srand48( seed );
 
 
