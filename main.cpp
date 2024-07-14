@@ -7,9 +7,14 @@
 # include <iostream>
 # include <iomanip>
 # include <ctime>
+#include <math.h>
 
-double next_expn(double seed, double lambda){
-    return 1;
+double next_exp(double seed, double lambda){
+
+    double r = rand();
+    double x = (-log(r)) / lambda;
+
+    return x;
 }
 
 int main(int argc, char** argv){
@@ -20,14 +25,19 @@ int main(int argc, char** argv){
 
     int n = std::stoi(*(argv+1));
     int n_cpu = std::stoi(*(argv+2));
-    int seed = std::stoi(*(argv+3));
-    int lambda = std::stoi(*(argv+4));
+    double seed = std::stod(*(argv+3));
+    double lambda = std::stod(*(argv+4));
     int random_upper_bound = std::stoi(*(argv+5));
 
+    srand(seed);
     
-
+    std::cout << next_exp(seed, lambda) << std::endl;
+    std::cout << next_exp(seed, lambda) << std::endl;   
+    std::cout << next_exp(seed, lambda) << std::endl;
+    
+    /*
     for (int i = 0; i < n; i++){
-        int arrival_time = floor(next_expn(seed, lambda));
+        int arrival_time = floor(next_exp(seed, lambda));
 
         int num_cpu_bursts = ceiling(drand() * 32);
 
@@ -52,5 +62,6 @@ int main(int argc, char** argv){
 
         }
     }
+    */
 
 }
