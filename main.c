@@ -88,7 +88,10 @@ int main(int argc, char** argv){
     int process_count = 0;
 
     float sum_cpu_burst_time = 0;
+    int num_cpu_burst_time = 0;
+
     float sum_io_burst_time = 0;
+    int num_io_burst_time = 0;
 
     float cpu_bound_sum_cpu_burst_time = 0;
     int cpu_bound_num_cpu_burst_time = 0;
@@ -107,6 +110,17 @@ int main(int argc, char** argv){
         int arrival_time = floor(next_exp(lambda, upper_bound));
 
         int num_cpu_bursts = ceil(drand48() * 32);
+        num_cpu_burst_time += num_cpu_bursts;
+        num_io_burst_time += num_cpu_bursts - 1;
+
+        if (i < n_cpu){
+            cpu_bound_num_cpu_burst_time += num_cpu_bursts;
+            cpu_bound_num_io_burst_time += num_cpu_bursts - 1;
+        }
+        else{
+            io_bound_num_cpu_burst_time += num_cpu_bursts;
+            io_bound_num_io_burst_time += num_cpu_bursts - 1;
+        }
 
         if (i < n_cpu){
             printf("CPU-bound ");
@@ -153,16 +167,15 @@ int main(int argc, char** argv){
                 cpu_bound_sum_cpu_burst_time += cpu_burst_time;
                 cpu_bound_sum_io_burst_time += io_burst_time;
 
-                cpu_bound_num_cpu_burst_time++;
-                cpu_bound_num_io_burst_time++;
+                
             }
             else{
                 io_bound_sum_cpu_burst_time += cpu_burst_time;
                 io_bound_sum_io_burst_time += io_burst_time;
-
-                io_bound_num_cpu_burst_time++;
-                io_bound_num_io_burst_time++;
             }
+
+            sum_cpu_burst_time += cpu_burst_time;
+            sum_io_burst_time += io_burst_time;
 
             //if last cpu burst, only print cpu burst.
             if (j == num_cpu_bursts-1){
@@ -172,9 +185,6 @@ int main(int argc, char** argv){
 
  
             printf("==> CPU burst %dms ==> I/O burst %dms\n", cpu_burst_time, io_burst_time);
-
-            sum_cpu_burst_time += cpu_burst_time;
-            sum_io_burst_time += io_burst_time;
 
         }
     }
@@ -190,9 +200,9 @@ int main(int argc, char** argv){
         return EXIT_FAILURE;
     }
 
-    float avg_cpu_burst_time = n_cpu ? (ceil((sum_cpu_burst_time * 1000.0) / n_cpu) / 1000.0) : 0.f;
+    float avg_cpu_burst_time = num_cpu_burst_time ? (ceil((sum_cpu_burst_time * 1000.0) / num_cpu_burst_time) / 1000.0) : 0.f;
 
-    float avg_io_burst_time = n-n_cpu ? (ceil((sum_io_burst_time * 1000.0) / (n-n_cpu)) / 1000.0) : 0.f;
+    float avg_io_burst_time = num_io_burst_time ? (ceil((sum_io_burst_time * 1000.0) / (num_io_burst_time)) / 1000.0) : 0.f;
 
     float cpu_bound_avg_cpu_burst_time = cpu_bound_num_cpu_burst_time ? (ceil((cpu_bound_sum_cpu_burst_time * 1000.0) / cpu_bound_num_cpu_burst_time) / 1000.0) : 0.f;
     float cpu_bound_avg_io_burst_time = cpu_bound_num_io_burst_time ? (ceil((cpu_bound_sum_io_burst_time * 1000.0) / cpu_bound_num_io_burst_time) / 1000.0) : 0.f;
