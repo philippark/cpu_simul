@@ -22,7 +22,7 @@ int main(int argc, char** argv){
 
     /*Parse argument input*/
     if (argc != 6){
-        fprintf(stderr, "%s", "Non-valid arguments");
+        fprintf(stderr, "%s", "ERROR: Non-valid arguments");
         return EXIT_FAILURE;
     }
 
@@ -31,40 +31,53 @@ int main(int argc, char** argv){
 
     int n = (int)strtol(*(argv+1), &e, 10);
     if (*e != '\0' || errno != 0){
-        fprintf(stderr, "Failed to get n\n");
+        fprintf(stderr, "ERROR: Failed to get n\n");
         return EXIT_FAILURE;
     }
 
     if (n <= 0){
-        fprintf(stderr, "N must be > 0\n");
+        fprintf(stderr, "ERROR: N must be > 0\n");
+        return EXIT_FAILURE;
+    }
+    if (n > 260){
+        fprintf(stderr, "ERROR: N must be <= 260\n");
         return EXIT_FAILURE;
     }
 
     int n_cpu = (int)strtol(*(argv+2), &e, 10);
     if (*e != '\0' || errno != 0){
-        fprintf(stderr, "Failed to get n_cpu\n");
+        fprintf(stderr, "ERROR: Failed to get n_cpu\n");
         return EXIT_FAILURE;
     }
 
     if (n_cpu < 0){
-        fprintf(stderr, "Number of CPU bound can't be negative\n");
+        fprintf(stderr, "ERROR: Number of CPU bound can't be negative\n");
+        return EXIT_FAILURE;
+    }
+    if (n_cpu > n){
+        fprintf(stderr, "ERROR: Number of CPU bound can't be greater than number of processes\n");
+        return EXIT_FAILURE;
     }
 
     long int seed = strtol(*(argv+3), &e, 10);
     if (*e != '\0' || errno != 0){
-        fprintf(stderr, "Failed to get seed\n");
+        fprintf(stderr, "ERROR: Failed to get seed\n");
         return EXIT_FAILURE;
     }
 
     float lambda = strtod(*(argv+4), &e);
     if (*e != '\0' || errno != 0){
-        fprintf(stderr, "Failed to get lambda\n");
+        fprintf(stderr, "ERROR: Failed to get lambda\n");
         return EXIT_FAILURE;
     }
 
     long int upper_bound = strtol(*(argv+5), &e, 10);
     if (*e != '\0' || errno != 0){
-        fprintf(stderr, "Failed to get upper_bound\n");
+        fprintf(stderr, "ERROR: Failed to get upper_bound\n");
+        return EXIT_FAILURE;
+    }
+    if (upper_bound < 0){
+        fprintf(stderr, "ERROR: upper bound can't be negative\n");
         return EXIT_FAILURE;
     }
 
@@ -145,10 +158,6 @@ int main(int argc, char** argv){
             alphabet_position++;
         }
 
-        if (alphabet_position == 26) {
-            break;
-        }
-
         for (int j = 0; j < num_cpu_bursts; j++){
             int cpu_burst_time = ceil(next_exp(lambda, upper_bound));
 
@@ -166,8 +175,6 @@ int main(int argc, char** argv){
 
                 cpu_bound_sum_cpu_burst_time += cpu_burst_time;
                 cpu_bound_sum_io_burst_time += io_burst_time;
-
-                
             }
             else{
                 io_bound_sum_cpu_burst_time += cpu_burst_time;
@@ -196,7 +203,7 @@ int main(int argc, char** argv){
     close(1);
     int fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
     if (fd == -1){
-        perror("open() failed\n");
+        fprintf(stderr, "ERROR: open() failed\n");
         return EXIT_FAILURE;
     }
 
