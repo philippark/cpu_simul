@@ -6,11 +6,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
-double next_exp(double lambda, double upper_bound){
-    double x = -1;
+float next_exp(float lambda, float upper_bound){
+    float x = -1;
 
     while (x < 0 || ceil(x) > upper_bound){
-        double r = drand48();
+        float r = drand48();
         x = -log( r ) / lambda;
     }
 
@@ -68,14 +68,6 @@ int main(int argc, char** argv){
         return EXIT_FAILURE;
     }
 
-    close(1);
-    int fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
-    if (fd == -1){
-        perror("open() failed\n");
-        return EXIT_FAILURE;
-    }
-
-
     /*print heading*/
     printf("<<< PROJECT PART I\n");
     printf("<<< -- process set (n=%d) with ", n);
@@ -95,19 +87,19 @@ int main(int argc, char** argv){
     int alphabet_position = 0;
     int process_count = 0;
 
-    double sum_cpu_burst_time = 0;
-    double sum_io_burst_time = 0;
+    float sum_cpu_burst_time = 0;
+    float sum_io_burst_time = 0;
 
-    double cpu_bound_sum_cpu_burst_time = 0;
+    float cpu_bound_sum_cpu_burst_time = 0;
     int cpu_bound_num_cpu_burst_time = 0;
 
-    double cpu_bound_sum_io_burst_time = 0;
+    float cpu_bound_sum_io_burst_time = 0;
     int cpu_bound_num_io_burst_time = 0;
 
-    double io_bound_sum_cpu_burst_time = 0;
+    float io_bound_sum_cpu_burst_time = 0;
     int io_bound_num_cpu_burst_time = 0;
 
-    double io_bound_sum_io_burst_time = 0;
+    float io_bound_sum_io_burst_time = 0;
     int io_bound_num_io_burst_time = 0;
 
 
@@ -190,7 +182,7 @@ int main(int argc, char** argv){
 
     
     /*Output statistics to simout.txt*/
-    /*
+    
     close(1);
     int fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
     if (fd == -1){
@@ -223,6 +215,6 @@ int main(int argc, char** argv){
     printf("-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
 
     close(fd);
-    */
+    
 }
 
