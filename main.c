@@ -3,6 +3,8 @@
 #include <math.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
+#include <fcntl.h>
 
 double next_exp(double lambda, double upper_bound){
     double x = -1;
@@ -18,20 +20,64 @@ double next_exp(double lambda, double upper_bound){
 
 int main(int argc, char** argv){
 
+    /*Parse argument input*/
     if (argc != 6){
         fprintf(stderr, "%s", "Non-valid arguments");
+        return EXIT_FAILURE;
     }
 
-    int n = atoi(*(argv+1));
-    int n_cpu = atoi(*(argv+2));
-    double seed = atof(*(argv+3));
-    double lambda = atof(*(argv+4));
-    double upper_bound = atof(*(argv+5));
+    char* e;
+    errno = 0;
 
-    //TODO: error check input args
-    //TODO: error check if n is beyond possible? 
+    int n = (int)strtol(*(argv+1), &e, 10);
+    if (*e != '\0' || errno != 0){
+        fprintf(stderr, "Failed to get n\n");
+        return EXIT_FAILURE;
+    }
 
-    printf("<<< PROJECT PART 1\n");
+    if (n <= 0){
+        fprintf(stderr, "N must be > 0\n");
+        return EXIT_FAILURE;
+    }
+
+    int n_cpu = (int)strtol(*(argv+2), &e, 10);
+    if (*e != '\0' || errno != 0){
+        fprintf(stderr, "Failed to get n_cpu\n");
+        return EXIT_FAILURE;
+    }
+
+    if (n_cpu < 0){
+        fprintf(stderr, "Number of CPU bound can't be negative\n");
+    }
+
+    long int seed = strtol(*(argv+3), &e, 10);
+    if (*e != '\0' || errno != 0){
+        fprintf(stderr, "Failed to get seed\n");
+        return EXIT_FAILURE;
+    }
+
+    float lambda = strtod(*(argv+4), &e);
+    if (*e != '\0' || errno != 0){
+        fprintf(stderr, "Failed to get lambda\n");
+        return EXIT_FAILURE;
+    }
+
+    long int upper_bound = strtol(*(argv+5), &e, 10);
+    if (*e != '\0' || errno != 0){
+        fprintf(stderr, "Failed to get upper_bound\n");
+        return EXIT_FAILURE;
+    }
+
+    close(1);
+    int fd = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
+    if (fd == -1){
+        perror("open() failed\n");
+        return EXIT_FAILURE;
+    }
+
+
+    /*print heading*/
+    printf("<<< PROJECT PART I\n");
     printf("<<< -- process set (n=%d) with ", n);
     if (n_cpu == 1){
         printf("%d CPU-bound process\n", n_cpu);
@@ -39,9 +85,11 @@ int main(int argc, char** argv){
     else{
         printf("%d CPU-bound processes\n", n_cpu);
     }
-    printf("<<< -- seed=%lf; lambda=%lf; bound=%lf\n", seed, lambda, upper_bound);
+    printf("<<< -- seed=%ld; lambda=%f; bound=%ld\n", seed, lambda, upper_bound);
 
+    /*initialize variables*/
     srand48( seed );
+
 
     char* alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int alphabet_position = 0;
@@ -49,14 +97,19 @@ int main(int argc, char** argv){
 
     double sum_cpu_burst_time = 0;
     double sum_io_burst_time = 0;
-    //just sum it all up 
 
     double cpu_bound_sum_cpu_burst_time = 0;
+    int cpu_bound_num_cpu_burst_time = 0;
+
     double cpu_bound_sum_io_burst_time = 0;
-    //in if statement, sum it all up
+    int cpu_bound_num_io_burst_time = 0;
 
     double io_bound_sum_cpu_burst_time = 0;
+    int io_bound_num_cpu_burst_time = 0;
+
     double io_bound_sum_io_burst_time = 0;
+    int io_bound_num_io_burst_time = 0;
+
 
     for (int i = 0; i < n; i++){
         int arrival_time = floor(next_exp(lambda, upper_bound));
@@ -70,9 +123,17 @@ int main(int argc, char** argv){
             printf("I/O-bound ");
         }
 
-        printf("process %c%d: arrival time %dms; %d CPU bursts:\n", *(alphabet+alphabet_position), process_count, arrival_time, num_cpu_bursts);
+        printf("process %c%d: arrival time %dms; ", *(alphabet+alphabet_position), process_count, arrival_time);
+
+        if (num_cpu_bursts == 1){
+            printf("%d CPU burst:\n", num_cpu_bursts);
+        }
+        else{
+            printf("%d CPU bursts:\n", num_cpu_bursts);
+        }
 
         process_count++;
+        //check if to move from A9->B0
         if (process_count == 10){
             process_count = 0;
             alphabet_position++;
@@ -92,17 +153,23 @@ int main(int argc, char** argv){
                 io_burst_time = ceil(next_exp(lambda, upper_bound)) * 8;
             }
 
-            //Calc if cpu bound
+            //Seperate calculations if cpu bound
             if (i < n_cpu){
                 cpu_burst_time *= 4;
                 io_burst_time /= 8;
 
                 cpu_bound_sum_cpu_burst_time += cpu_burst_time;
                 cpu_bound_sum_io_burst_time += io_burst_time;
+
+                cpu_bound_num_cpu_burst_time++;
+                cpu_bound_num_io_burst_time++;
             }
             else{
                 io_bound_sum_cpu_burst_time += cpu_burst_time;
                 io_bound_sum_io_burst_time += io_burst_time;
+
+                io_bound_num_cpu_burst_time++;
+                io_bound_num_io_burst_time++;
             }
 
             //if last cpu burst, only print cpu burst.
@@ -121,14 +188,41 @@ int main(int argc, char** argv){
     }
 
 
-
+    
+    /*Output statistics to simout.txt*/
     /*
-    TODO:
-    - n
-    - n_cpu
-    - IO: n - n_cpu
+    close(1);
+    int fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
+    if (fd == -1){
+        perror("open() failed\n");
+        return EXIT_FAILURE;
+    }
 
+    float avg_cpu_burst_time = n_cpu ? (ceil((sum_cpu_burst_time * 1000.0) / n_cpu) / 1000.0) : 0.f;
+
+    float avg_io_burst_time = n-n_cpu ? (ceil((sum_io_burst_time * 1000.0) / (n-n_cpu)) / 1000.0) : 0.f;
+
+    float cpu_bound_avg_cpu_burst_time = cpu_bound_num_cpu_burst_time ? (ceil((cpu_bound_sum_cpu_burst_time * 1000.0) / cpu_bound_num_cpu_burst_time) / 1000.0) : 0.f;
+    float cpu_bound_avg_io_burst_time = cpu_bound_num_io_burst_time ? (ceil((cpu_bound_sum_io_burst_time * 1000.0) / cpu_bound_num_io_burst_time) / 1000.0) : 0.f;
+
+    float io_bound_avg_cpu_burst_time = io_bound_num_cpu_burst_time ? (ceil((io_bound_sum_cpu_burst_time * 1000.0) / io_bound_num_cpu_burst_time) / 1000.0) : 0.f;
+    float io_bound_avg_io_burst_time = io_bound_num_io_burst_time ? (ceil((io_bound_sum_io_burst_time * 1000.0) / io_bound_num_io_burst_time) / 1000.0) : 0.f;
+
+
+
+    printf("-- number of processes: %d\n", n);
+    printf("-- number of CPU-bound processes: %d\n", n_cpu);
+    printf("-- number of I/O-bound processes: %d\n", n - n_cpu);
+
+    printf("-- CPU-bound average CPU burst time: %.3f ms\n", cpu_bound_avg_cpu_burst_time);
+    printf("-- I/O-bound average CPU burst time: %.3f ms\n", io_bound_avg_cpu_burst_time);
+    printf("-- overall average CPU burst time: %.3f ms\n", avg_cpu_burst_time);
+
+    printf("-- CPU-bound average I/O burst time: %.3f ms\n", cpu_bound_avg_io_burst_time);
+    printf("-- I/O-bound average I/O burst time: %.3f ms\n", io_bound_avg_io_burst_time);
+    printf("-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
+
+    close(fd);
     */
-
 }
 
