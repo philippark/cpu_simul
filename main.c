@@ -5,6 +5,7 @@
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 
 float next_exp(float lambda, float upper_bound){
     float x = -1;
@@ -199,8 +200,6 @@ int main(int argc, char** argv){
 
     
     /*Output statistics to simout.txt*/
-    
-    close(1);
     int fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
     if (fd == -1){
         fprintf(stderr, "ERROR: open() failed\n");
@@ -217,21 +216,27 @@ int main(int argc, char** argv){
     float io_bound_avg_cpu_burst_time = io_bound_num_cpu_burst_time ? (ceil((io_bound_sum_cpu_burst_time * 1000.0) / io_bound_num_cpu_burst_time) / 1000.0) : 0.f;
     float io_bound_avg_io_burst_time = io_bound_num_io_burst_time ? (ceil((io_bound_sum_io_burst_time * 1000.0) / io_bound_num_io_burst_time) / 1000.0) : 0.f;
 
+    dprintf(fd, "-- number of processes: %d\n", n);
 
+    dprintf(fd, "-- number of CPU-bound processes: %d\n", n_cpu);
 
-    printf("-- number of processes: %d\n", n);
-    printf("-- number of CPU-bound processes: %d\n", n_cpu);
-    printf("-- number of I/O-bound processes: %d\n", n - n_cpu);
+    dprintf(fd, "-- number of I/O-bound processes: %d\n", n - n_cpu);
 
-    printf("-- CPU-bound average CPU burst time: %.3f ms\n", cpu_bound_avg_cpu_burst_time);
-    printf("-- I/O-bound average CPU burst time: %.3f ms\n", io_bound_avg_cpu_burst_time);
-    printf("-- overall average CPU burst time: %.3f ms\n", avg_cpu_burst_time);
+    dprintf(fd, "-- CPU-bound average CPU burst time: %.3f ms\n", cpu_bound_avg_cpu_burst_time);
 
-    printf("-- CPU-bound average I/O burst time: %.3f ms\n", cpu_bound_avg_io_burst_time);
-    printf("-- I/O-bound average I/O burst time: %.3f ms\n", io_bound_avg_io_burst_time);
-    printf("-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
+    dprintf(fd, "-- I/O-bound average CPU burst time: %.3f ms\n", io_bound_avg_cpu_burst_time);
+    
+    dprintf(fd, "-- overall average CPU burst time: %.3f ms\n", avg_cpu_burst_time);
+    
+    dprintf(fd, "-- CPU-bound average I/O burst time: %.3f ms\n", cpu_bound_avg_io_burst_time);
 
-    close(fd);
+    dprintf(fd, "-- I/O-bound average I/O burst time: %.3f ms\n", io_bound_avg_io_burst_time);
+
+    dprintf(fd, "-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
+
+    close(fd);  
+    
+    return EXIT_SUCCESS;
     
 }
 
