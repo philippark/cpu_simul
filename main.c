@@ -1,103 +1,99 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <iostream>
+#include <cstdlib>
+#include <cmath>
 #include <unistd.h>
-#include <time.h>
-#include <errno.h>
+#include <ctime>
+#include <cerrno>
 #include <fcntl.h>
-#include <string.h>
+#include <cstring>
 
-float next_exp(float lambda, float upper_bound){
+float next_exp(float lambda, float upper_bound) {
     float x = -1;
 
-    while (x < 0 || ceil(x) > upper_bound){
+    while (x < 0 || std::ceil(x) > upper_bound) {
         float r = drand48();
-        x = -log( r ) / lambda;
+        x = -std::log(r) / lambda;
     }
 
     return x;
 }
 
-
-int main(int argc, char** argv){
-
-    /*Parse argument input*/
-    if (argc != 6){
-        fprintf(stderr, "%s", "ERROR: Non-valid arguments");
+int main(int argc, char** argv) {
+    /* Parse argument input */
+    if (argc != 6) {
+        std::cerr << "ERROR: Non-valid arguments" << std::endl;
         return EXIT_FAILURE;
     }
 
     char* e;
     errno = 0;
 
-    int n = (int)strtol(*(argv+1), &e, 10);
-    if (*e != '\0' || errno != 0){
-        fprintf(stderr, "ERROR: Failed to get n\n");
+    int n = std::strtol(argv[1], &e, 10);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get n" << std::endl;
         return EXIT_FAILURE;
     }
 
-    if (n <= 0){
-        fprintf(stderr, "ERROR: N must be > 0\n");
+    if (n <= 0) {
+        std::cerr << "ERROR: N must be > 0" << std::endl;
         return EXIT_FAILURE;
     }
-    if (n > 260){
-        fprintf(stderr, "ERROR: N must be <= 260\n");
-        return EXIT_FAILURE;
-    }
-
-    int n_cpu = (int)strtol(*(argv+2), &e, 10);
-    if (*e != '\0' || errno != 0){
-        fprintf(stderr, "ERROR: Failed to get n_cpu\n");
+    if (n > 260) {
+        std::cerr << "ERROR: N must be <= 260" << std::endl;
         return EXIT_FAILURE;
     }
 
-    if (n_cpu < 0){
-        fprintf(stderr, "ERROR: Number of CPU bound can't be negative\n");
-        return EXIT_FAILURE;
-    }
-    if (n_cpu > n){
-        fprintf(stderr, "ERROR: Number of CPU bound can't be greater than number of processes\n");
+    int n_cpu = std::strtol(argv[2], &e, 10);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get n_cpu" << std::endl;
         return EXIT_FAILURE;
     }
 
-    long int seed = strtol(*(argv+3), &e, 10);
-    if (*e != '\0' || errno != 0){
-        fprintf(stderr, "ERROR: Failed to get seed\n");
+    if (n_cpu < 0) {
+        std::cerr << "ERROR: Number of CPU bound can't be negative" << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (n_cpu > n) {
+        std::cerr << "ERROR: Number of CPU bound can't be greater than number of processes" << std::endl;
         return EXIT_FAILURE;
     }
 
-    float lambda = strtod(*(argv+4), &e);
-    if (*e != '\0' || errno != 0){
-        fprintf(stderr, "ERROR: Failed to get lambda\n");
+    long int seed = std::strtol(argv[3], &e, 10);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get seed" << std::endl;
         return EXIT_FAILURE;
     }
 
-    long int upper_bound = strtol(*(argv+5), &e, 10);
-    if (*e != '\0' || errno != 0){
-        fprintf(stderr, "ERROR: Failed to get upper_bound\n");
-        return EXIT_FAILURE;
-    }
-    if (upper_bound < 0){
-        fprintf(stderr, "ERROR: upper bound can't be negative\n");
+    float lambda = std::strtod(argv[4], &e);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get lambda" << std::endl;
         return EXIT_FAILURE;
     }
 
-    /*print heading*/
-    printf("<<< PROJECT PART I\n");
-    printf("<<< -- process set (n=%d) with ", n);
-    if (n_cpu == 1){
-        printf("%d CPU-bound process\n", n_cpu);
+    long int upper_bound = std::strtol(argv[5], &e, 10);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get upper_bound" << std::endl;
+        return EXIT_FAILURE;
     }
-    else{
-        printf("%d CPU-bound processes\n", n_cpu);
+    if (upper_bound < 0) {
+        std::cerr << "ERROR: upper bound can't be negative" << std::endl;
+        return EXIT_FAILURE;
     }
-    printf("<<< -- seed=%ld; lambda=%f; bound=%ld\n", seed, lambda, upper_bound);
 
-    /*initialize variables*/
-    srand48( seed );
+    /* Print heading */
+    std::cout << "<<< PROJECT PART I" << std::endl;
+    std::cout << "<<< -- process set (n=" << n << ") with ";
+    if (n_cpu == 1) {
+        std::cout << n_cpu << " CPU-bound process" << std::endl;
+    } else {
+        std::cout << n_cpu << " CPU-bound processes" << std::endl;
+    }
+    std::cout << "<<< -- seed=" << seed << "; lambda=" << lambda << "; bound=" << upper_bound << std::endl;
 
+    /* Initialize variables */
+    srand48(seed);
 
-    char* alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char* alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int alphabet_position = 0;
     int process_count = 0;
 
@@ -119,65 +115,60 @@ int main(int argc, char** argv){
     float io_bound_sum_io_burst_time = 0;
     int io_bound_num_io_burst_time = 0;
 
+    for (int i = 0; i < n; i++) {
+        int arrival_time = std::floor(next_exp(lambda, upper_bound));
 
-    for (int i = 0; i < n; i++){
-        int arrival_time = floor(next_exp(lambda, upper_bound));
-
-        int num_cpu_bursts = ceil(drand48() * 32);
+        int num_cpu_bursts = std::ceil(drand48() * 32);
         num_cpu_burst_time += num_cpu_bursts;
         num_io_burst_time += num_cpu_bursts - 1;
 
-        if (i < n_cpu){
+        if (i < n_cpu) {
             cpu_bound_num_cpu_burst_time += num_cpu_bursts;
             cpu_bound_num_io_burst_time += num_cpu_bursts - 1;
-        }
-        else{
+        } else {
             io_bound_num_cpu_burst_time += num_cpu_bursts;
             io_bound_num_io_burst_time += num_cpu_bursts - 1;
         }
 
-        if (i < n_cpu){
-            printf("CPU-bound ");
-        }
-        else{
-            printf("I/O-bound ");
+        if (i < n_cpu) {
+            std::cout << "CPU-bound ";
+        } else {
+            std::cout << "I/O-bound ";
         }
 
-        printf("process %c%d: arrival time %dms; ", *(alphabet+alphabet_position), process_count, arrival_time);
+        std::cout << "process " << alphabet[alphabet_position] << process_count << ": arrival time " << arrival_time << "ms; ";
 
-        if (num_cpu_bursts == 1){
-            printf("%d CPU burst:\n", num_cpu_bursts);
-        }
-        else{
-            printf("%d CPU bursts:\n", num_cpu_bursts);
+        if (num_cpu_bursts == 1) {
+            std::cout << num_cpu_bursts << " CPU burst:" << std::endl;
+        } else {
+            std::cout << num_cpu_bursts << " CPU bursts:" << std::endl;
         }
 
         process_count++;
-        //check if to move from A9->B0
-        if (process_count == 10){
+        // Check if to move from A9->B0
+        if (process_count == 10) {
             process_count = 0;
             alphabet_position++;
         }
 
-        for (int j = 0; j < num_cpu_bursts; j++){
-            int cpu_burst_time = ceil(next_exp(lambda, upper_bound));
+        for (int j = 0; j < num_cpu_bursts; j++) {
+            int cpu_burst_time = std::ceil(next_exp(lambda, upper_bound));
 
             int io_burst_time = 0;
 
-            //if not the last cpu burst, get the io burst time.
-            if (j != num_cpu_bursts-1){
-                io_burst_time = ceil(next_exp(lambda, upper_bound)) * 8;
+            // If not the last CPU burst, get the I/O burst time.
+            if (j != num_cpu_bursts - 1) {
+                io_burst_time = std::ceil(next_exp(lambda, upper_bound)) * 8;
             }
 
-            //Seperate calculations if cpu bound
-            if (i < n_cpu){
+            // Separate calculations if CPU bound
+            if (i < n_cpu) {
                 cpu_burst_time *= 4;
                 io_burst_time /= 8;
 
                 cpu_bound_sum_cpu_burst_time += cpu_burst_time;
                 cpu_bound_sum_io_burst_time += io_burst_time;
-            }
-            else{
+            } else {
                 io_bound_sum_cpu_burst_time += cpu_burst_time;
                 io_bound_sum_io_burst_time += io_burst_time;
             }
@@ -185,58 +176,41 @@ int main(int argc, char** argv){
             sum_cpu_burst_time += cpu_burst_time;
             sum_io_burst_time += io_burst_time;
 
-            //if last cpu burst, only print cpu burst.
-            if (j == num_cpu_bursts-1){
-                printf("==> CPU burst %dms\n", cpu_burst_time);
+            // If last CPU burst, only print CPU burst.
+            if (j == num_cpu_bursts - 1) {
+                std::cout << "==> CPU burst " << cpu_burst_time << "ms" << std::endl;
                 break;
             }
 
- 
-            printf("==> CPU burst %dms ==> I/O burst %dms\n", cpu_burst_time, io_burst_time);
-
+            std::cout << "==> CPU burst " << cpu_burst_time << "ms ==> I/O burst " << io_burst_time << "ms" << std::endl;
         }
     }
 
-
-    
-    /*Output statistics to simout.txt*/
+    /* Output statistics to simout.txt */
     int fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
-    if (fd == -1){
-        fprintf(stderr, "ERROR: open() failed\n");
+    if (fd == -1) {
+        std::cerr << "ERROR: open() failed" << std::endl;
         return EXIT_FAILURE;
     }
 
-    float avg_cpu_burst_time = num_cpu_burst_time ? (ceil((sum_cpu_burst_time * 1000.0) / num_cpu_burst_time) / 1000.0) : 0.f;
-
-    float avg_io_burst_time = num_io_burst_time ? (ceil((sum_io_burst_time * 1000.0) / (num_io_burst_time)) / 1000.0) : 0.f;
-
-    float cpu_bound_avg_cpu_burst_time = cpu_bound_num_cpu_burst_time ? (ceil((cpu_bound_sum_cpu_burst_time * 1000.0) / cpu_bound_num_cpu_burst_time) / 1000.0) : 0.f;
-    float cpu_bound_avg_io_burst_time = cpu_bound_num_io_burst_time ? (ceil((cpu_bound_sum_io_burst_time * 1000.0) / cpu_bound_num_io_burst_time) / 1000.0) : 0.f;
-
-    float io_bound_avg_cpu_burst_time = io_bound_num_cpu_burst_time ? (ceil((io_bound_sum_cpu_burst_time * 1000.0) / io_bound_num_cpu_burst_time) / 1000.0) : 0.f;
-    float io_bound_avg_io_burst_time = io_bound_num_io_burst_time ? (ceil((io_bound_sum_io_burst_time * 1000.0) / io_bound_num_io_burst_time) / 1000.0) : 0.f;
+    float avg_cpu_burst_time = num_cpu_burst_time ? (std::ceil((sum_cpu_burst_time * 1000.0) / num_cpu_burst_time) / 1000.0) : 0.f;
+    float avg_io_burst_time = num_io_burst_time ? (std::ceil((sum_io_burst_time * 1000.0) / num_io_burst_time) / 1000.0) : 0.f;
+    float cpu_bound_avg_cpu_burst_time = cpu_bound_num_cpu_burst_time ? (std::ceil((cpu_bound_sum_cpu_burst_time * 1000.0) / cpu_bound_num_cpu_burst_time) / 1000.0) : 0.f;
+    float cpu_bound_avg_io_burst_time = cpu_bound_num_io_burst_time ? (std::ceil((cpu_bound_sum_io_burst_time * 1000.0) / cpu_bound_num_io_burst_time) / 1000.0) : 0.f;
+    float io_bound_avg_cpu_burst_time = io_bound_num_cpu_burst_time ? (std::ceil((io_bound_sum_cpu_burst_time * 1000.0) / io_bound_num_cpu_burst_time) / 1000.0) : 0.f;
+    float io_bound_avg_io_burst_time = io_bound_num_io_burst_time ? (std::ceil((io_bound_sum_io_burst_time * 1000.0) / io_bound_num_io_burst_time) / 1000.0) : 0.f;
 
     dprintf(fd, "-- number of processes: %d\n", n);
-
     dprintf(fd, "-- number of CPU-bound processes: %d\n", n_cpu);
-
     dprintf(fd, "-- number of I/O-bound processes: %d\n", n - n_cpu);
-
     dprintf(fd, "-- CPU-bound average CPU burst time: %.3f ms\n", cpu_bound_avg_cpu_burst_time);
-
     dprintf(fd, "-- I/O-bound average CPU burst time: %.3f ms\n", io_bound_avg_cpu_burst_time);
-    
     dprintf(fd, "-- overall average CPU burst time: %.3f ms\n", avg_cpu_burst_time);
-    
     dprintf(fd, "-- CPU-bound average I/O burst time: %.3f ms\n", cpu_bound_avg_io_burst_time);
-
     dprintf(fd, "-- I/O-bound average I/O burst time: %.3f ms\n", io_bound_avg_io_burst_time);
-
     dprintf(fd, "-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
 
-    close(fd);  
-    
-    return EXIT_SUCCESS;
-    
-}
+    close(fd);
 
+    return EXIT_SUCCESS;
+}
