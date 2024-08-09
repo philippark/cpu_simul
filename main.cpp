@@ -19,7 +19,7 @@ class Process{
 	string name;
 	int time;
 	short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst; 3 is just finished waiting
-}
+};
 
 float next_exp(float lambda, float upper_bound) {
     float x = -1;
@@ -128,10 +128,11 @@ int main(int argc, char** argv) {
 
     float io_bound_sum_io_burst_time = 0;
     int io_bound_num_io_burst_time = 0;
-
-    for (int i = 0; i < n; i++) {
+	//vector for processes for use in part 2 algorithms
+    vector<Process> processes; 
+    for (int i = 0; i < n; i++) { // loop through all processes
         int arrival_time = std::floor(next_exp(lambda, upper_bound));
-
+		
         int num_cpu_bursts = std::ceil(drand48() * 32);
         num_cpu_burst_time += num_cpu_bursts;
         num_io_burst_time += num_cpu_bursts - 1;
