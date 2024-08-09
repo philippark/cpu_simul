@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <fcntl.h>
 
 using namespace std;
 
@@ -230,7 +231,7 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
-
+/*
 void fcfs(){
     priority_queue<Process> tasks;
     queue<Process> ready;
@@ -240,3 +241,4 @@ void fcfs(){
     }
 
 }
+*/
