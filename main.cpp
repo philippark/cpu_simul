@@ -14,6 +14,13 @@ class process:
 
 */
 
+class Process{
+	vector<tuple<int, int>> burst_times; 
+	string name;
+	int time;
+	short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst; 3 is just finished waiting
+}
+
 float next_exp(float lambda, float upper_bound) {
     float x = -1;
 
