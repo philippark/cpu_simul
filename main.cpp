@@ -1,11 +1,6 @@
-#include <iostream>
-#include <cstdlib>
-#include <cmath>
-#include <unistd.h>
-#include <ctime>
-#include <cerrno>
-#include <fcntl.h>
-#include <cstring>
+#include <bits/stdc++.h>
+
+using namespace std;
 
 /*
 class process:
@@ -16,7 +11,7 @@ class process:
     - time
     - string process_state
 
-    
+
 */
 
 float next_exp(float lambda, float upper_bound) {
@@ -225,4 +220,15 @@ int main(int argc, char** argv) {
     close(fd);
 
     return EXIT_SUCCESS;
+}
+
+
+void fcfs(){
+    priority_queue<Process> tasks;
+    queue<Process> ready;
+
+    while (!tasks.empty() && !ready.empty()){
+        Process curr = tasks.
+    }
+
 }
