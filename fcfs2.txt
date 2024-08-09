@@ -1,0 +1,37 @@
+FCFS:
+
+tasks priority_queue 
+ready queue
+
+initialize tasks with all the arrival times
+
+while (tasks and ready not empty):
+	if task is empty:
+		add front of ready
+
+	grab next task in tasks
+
+	if task is cpu finished:
+		add back to task its io finish time
+		grab next in ready, calculate its cpu finish and add to tasks
+	else if task is arrival: 
+		add to ready queue
+	else if task is io finished:
+		move index
+		add to ready queue	
+
+
+
+
+
+arrival 
+cpu -> io -> back to ready
+    ^ 
+  add next ready 
+
+
+
+RR:
+
+
+
