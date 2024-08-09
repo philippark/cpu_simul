@@ -16,10 +16,13 @@ class process:
 */
 
 class Process{
-	vector<tuple<int, int>> burst_times; 
-	string name;
-	int time;
-	short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst; 3 is just finished waiting
+	public:
+		vector<tuple<int, int>> burst_times; 
+		string name;
+		int time;
+		short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst; 3 is just finished waiting
+		Process(vector<tuple<int, int>> burst_times_, string name_, int time_, short process_state_) : 
+			burst_times(burst_times_), name(name_),time(time_),process_state(process_state_) {} 
 };
 
 float next_exp(float lambda, float upper_bound) {
@@ -129,11 +132,11 @@ int main(int argc, char** argv) {
 
     float io_bound_sum_io_burst_time = 0;
     int io_bound_num_io_burst_time = 0;
-	//vector for processes for use in part 2 algorithms
+    //vector for processes for use in part 2 algorithms
     vector<Process> processes; 
     for (int i = 0; i < n; i++) { // loop through all processes
+	vector<tuple<int,int>> burst_times;
         int arrival_time = std::floor(next_exp(lambda, upper_bound));
-		
         int num_cpu_bursts = std::ceil(drand48() * 32);
         num_cpu_burst_time += num_cpu_bursts;
         num_io_burst_time += num_cpu_bursts - 1;
@@ -191,13 +194,16 @@ int main(int argc, char** argv) {
 
             sum_cpu_burst_time += cpu_burst_time;
             sum_io_burst_time += io_burst_time;
-
+            
+            tuple<int,int> bursts;
+            
             // If last CPU burst, only print CPU burst.
             if (j == num_cpu_bursts - 1) {
                 std::cout << "==> CPU burst " << cpu_burst_time << "ms" << std::endl;
+                
                 break;
             }
-
+            
             std::cout << "==> CPU burst " << cpu_burst_time << "ms ==> I/O burst " << io_burst_time << "ms" << std::endl;
         }
     }
@@ -225,7 +231,6 @@ int main(int argc, char** argv) {
     dprintf(fd, "-- CPU-bound average I/O burst time: %.3f ms\n", cpu_bound_avg_io_burst_time);
     dprintf(fd, "-- I/O-bound average I/O burst time: %.3f ms\n", io_bound_avg_io_burst_time);
     dprintf(fd, "-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
-
     close(fd);
 
     return EXIT_SUCCESS;
