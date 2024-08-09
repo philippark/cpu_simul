@@ -7,6 +7,18 @@
 #include <fcntl.h>
 #include <cstring>
 
+/*
+class process:
+    - [ [cpu, io], [cpu, io], ... ]
+    - index
+    - name
+
+    - time
+    - string process_state
+
+    
+*/
+
 float next_exp(float lambda, float upper_bound) {
     float x = -1;
 

@@ -17,4 +17,15 @@ while all 3 are not empty
         add min(waiting top and next process arrival time)
     }
 
+
+
+
+
+queue ready
+pq waiting
+
+int time = 0
+
+grab first of ready
+
 */
