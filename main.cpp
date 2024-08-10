@@ -273,12 +273,120 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
     cout << "FCFS" << endl;
 
     queue<Process> ready;
+    bool running = false;
 
-    while (!tasks.empty() || !ready.empty()){
-        Process curr = tasks.top();
-        tasks.pop();
+    //initialize the first process
+    Process first = tasks.top();
+    tasks.pop();
+
+    cout << first.name << " arrived; added to ready queue [Q A0]" << endl;
+
+    first.time += first.burst_times[first.index].first;
+    first.process_state = 1;
+
+    cout << first.name << " started using the cpu for " << first.burst_times[first.index].first << " burst [Q empty] " << endl;
+    tasks.push(first);
+    running = true;
+
+    int count = 0;
+
+    while ( (!tasks.empty() || !ready.empty()) && count != 22){
+        count++;
+
+        cout << "tasks: " << tasks.size() << " ready: " << ready.size() << endl;
+
+        Process curr;
+        if (tasks.empty()){
+            curr = ready.front();
+            ready.pop();
+
+            //run its cpu? and change state to 1?
+        }
+        else {
+            curr = tasks.top();
+            tasks.pop();
+        }
 
         cout << curr.name << " " << curr.process_state << " " << curr.time << endl;
+
+        if (curr.index >= curr.burst_times.size()){
+            cout << curr.name << " finished" << endl;
+            continue;
+        }
+
+        /*
+        if task is arrival: 
+            add to ready queue
+        */
+        if (!running){
+            if (ready.empty()) continue;
+
+            Process next = ready.front();
+            ready.pop();
+
+            next.time = curr_time + next.burst_times[next.index].first;
+            next.process_state = 1;
+            
+            cout << next.name << " started using the cpu " << endl;
+
+            tasks.push(next);
+
+            running = true;
+        }
+
+        if (curr.process_state == 0){
+            cout << curr.name << " arrived: added to ready queue" << endl;
+            ready.push(curr);
+        }
+
+        /*
+        if task is cpu finished:
+            add back to task its io finish time
+            grab next in ready, calculate its cpu finish and add to tasks
+        */
+
+        
+        else if (curr.process_state == 1){
+            cout << curr.name << " completed a cpu burst " << endl;
+            
+            int curr_time = curr.time;
+
+            curr.time += curr.burst_times[curr.index].second;
+            curr.process_state = 2;
+
+            cout << curr.name << " switching out of cpu; blocking on I/O until " << curr.time << endl;
+
+            tasks.push(curr);
+
+            if (ready.empty()) continue;
+
+
+            Process next = ready.front();
+            ready.pop();
+
+            next.time = curr_time + next.burst_times[next.index].first;
+            next.process_state = 1;
+            
+            cout << next.name << " started using the cpu " << endl;
+
+            tasks.push(next);
+
+        }
+        
+
+       /*
+        else if task is io finished:
+            move index
+            add to ready queue	
+        */
+       
+        else if (curr.process_state == 2){
+            cout << curr.name << " completed I/O; added to ready queue " << endl;
+
+            curr.index++;
+            ready.push(curr);
+        }
+        
     }
 
 }
