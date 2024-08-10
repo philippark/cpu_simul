@@ -17,13 +17,32 @@ class process:
 
 class Process{
 	public:
-		vector<tuple<int, int>> burst_times; 
+		vector<pair<int, int>> burst_times; 
+        int index = 0;
 		string name;
 		int time;
 		short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst; 3 is just finished waiting
-		Process(vector<tuple<int, int>> burst_times_, string name_, int time_, short process_state_) : 
-			burst_times(burst_times_), name(name_),time(time_),process_state(process_state_) {} 
+	
 };
+
+class Foo
+{
+
+};
+
+class Compare
+{
+public:
+    bool operator() (Process p1, Process p2)
+    {
+        return p1.time > p2.time;
+    }
+};
+
+void fcfs(priority_queue<Process, vector<Process>, Compare> &tasks);
+
+
+
 
 float next_exp(float lambda, float upper_bound) {
     float x = -1;
@@ -133,9 +152,12 @@ int main(int argc, char** argv) {
     float io_bound_sum_io_burst_time = 0;
     int io_bound_num_io_burst_time = 0;
     //vector for processes for use in part 2 algorithms
-    vector<Process> processes; 
+    //priority_queue<Process, vector<Process>, Compare> tasks; 
+    priority_queue<Process, std::vector<Process>, Compare> tasks;
+
     for (int i = 0; i < n; i++) { // loop through all processes
-	vector<tuple<int,int>> burst_times;
+        Process process;
+	    //vector<pair<int,int>> burst_times;
         int arrival_time = std::floor(next_exp(lambda, upper_bound));
         int num_cpu_bursts = std::ceil(drand48() * 32);
         num_cpu_burst_time += num_cpu_bursts;
@@ -156,6 +178,9 @@ int main(int argc, char** argv) {
         }
 
         std::cout << "process " << alphabet[alphabet_position] << process_count << ": arrival time " << arrival_time << "ms; ";
+        process.name = alphabet[alphabet_position] + to_string(process_count);
+        process.time = arrival_time;
+        process.process_state = 0;
 
         if (num_cpu_bursts == 1) {
             std::cout << num_cpu_bursts << " CPU burst:" << std::endl;
@@ -195,17 +220,23 @@ int main(int argc, char** argv) {
             sum_cpu_burst_time += cpu_burst_time;
             sum_io_burst_time += io_burst_time;
             
-            tuple<int,int> bursts;
-            
             // If last CPU burst, only print CPU burst.
             if (j == num_cpu_bursts - 1) {
                 std::cout << "==> CPU burst " << cpu_burst_time << "ms" << std::endl;
-                
+                process.burst_times.push_back({cpu_burst_time, 0});
                 break;
             }
             
             std::cout << "==> CPU burst " << cpu_burst_time << "ms ==> I/O burst " << io_burst_time << "ms" << std::endl;
+            process.burst_times.push_back({cpu_burst_time, io_burst_time});
         }
+
+        //Test output to see if matches
+        cout << process.name << " " << process.process_state << " " << endl;
+        for (int i = 0; i < process.burst_times.size(); i++){
+            cout << process.burst_times[i].first << " " << process.burst_times[i].second << endl;
+        }
+        tasks.push(process);
     }
 
     /* Output statistics to simout.txt */
@@ -233,17 +264,22 @@ int main(int argc, char** argv) {
     dprintf(fd, "-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
     close(fd);
 
+    fcfs(tasks);
+
     return EXIT_SUCCESS;
 }
 
-/*
-void fcfs(){
-    priority_queue<Process> tasks;
+void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
+    cout << "FCFS" << endl;
+
     queue<Process> ready;
 
-    while (!tasks.empty() && !ready.empty()){
-        Process curr = tasks.
+    while (!tasks.empty() || !ready.empty()){
+        Process curr = tasks.top();
+        tasks.pop();
+
+        cout << curr.name << " " << curr.process_state << " " << curr.time << endl;
     }
 
 }
-*/
+

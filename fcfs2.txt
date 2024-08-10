@@ -5,7 +5,7 @@ ready queue
 
 initialize tasks with all the arrival times
 
-while (tasks and ready not empty):
+while (tasks OR ready not empty):
 	if task is empty:
 		add front of ready
 
