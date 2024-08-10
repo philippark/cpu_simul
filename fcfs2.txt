@@ -31,7 +31,24 @@ cpu -> io -> back to ready
 
 
 
-RR:
+FCFS2:
 
+if not running and ready not empty:
+	run the next in ready
 
+grab next task
 
+if task is done (index is beyond its burst time)
+	continue
+
+if cpu done:
+	running = false
+	update system_time
+	switch to io
+if io done:
+	increment index
+	update system_time
+	add to ready
+if arrival:
+	update system_time
+	add to ready
