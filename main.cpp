@@ -281,7 +281,8 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
     while ( (!tasks.empty() || !ready.empty())){
         count++;
         
-        //if nothing running, grab next in ready, and calculate its cpu burst finish time, add to tasks
+        //if nothing running, or no tasks to be done, and there are tasks that are ready
+        //grab next in ready, and calculate its cpu burst finish time, add to tasks
         if ((!running && !ready.empty() ) || (tasks.empty() && !ready.empty())){
             Process curr = ready.front();
             ready.pop();
@@ -300,12 +301,7 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
         tasks.pop();
         system_time = curr.time;
 
-        if (curr.index >= curr.burst_times.size()){
-            cout << system_time << " " << curr.name << " terminated " << endl;
-            continue;
-        }
-
-        //if finished cpu burst
+        //if finished cpu burst, move to io burst time
         if (curr.process_state == 1){
             cout << system_time << " " << curr.name << " completed a cpu burst " << endl;
 
@@ -323,9 +319,14 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
             cout << system_time << " " << curr.name << " completed io. added to ready queue " << endl;
 
             curr.index++;
+
+            if (curr.index >= curr.burst_times.size()){
+                cout << system_time << " " << curr.name << " terminated " << endl;
+                continue;
+            }
+            
             ready.push(curr);
         }
-
 
         //if arrived
         else if (curr.process_state == 0){
