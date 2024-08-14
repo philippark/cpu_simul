@@ -325,7 +325,7 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
         //if arrived, add to ready queue
         if (curr.process_state == 0){
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " arrived; added to the ready queue ";
+            cout << "time " << system_time << "ms: Process " << curr.name << " arrived; added to ready queue ";
 
             ready.push(curr);
 
@@ -334,12 +334,22 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
 
         //if finished cpu burst, move to io burst time
         else if (curr.process_state == 1){
+            running = false;
+
             if (curr.burst_times[curr.index].second == -1){
                 cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
                 continue;
             }
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; " << curr.burst_times.size() - curr.index - 1<< " bursts to go " << queueState(ready) << endl;
+            cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; ";
+            cout << curr.burst_times.size() - curr.index - 1;
+            if (curr.burst_times.size() - curr.index - 1 == 1){
+                cout << " burst to go ";
+            }
+            else {
+                cout << " bursts to go ";
+            }
+            cout << queueState(ready) << endl;
 
             curr.time += curr.burst_times[curr.index].second + (context_switch / 2);
             curr.process_state = 2;
@@ -348,8 +358,6 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
             cout << "time " << system_time << "ms: Process " << curr.name << " switching out of CPU; blocking on I/O until time " << curr.time << "ms " << queueState(ready) << endl;
 
             system_time += (context_switch / 2);
-
-            running = false;
         }
 
         //if finished io burst, add to ready queue
@@ -365,14 +373,18 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
 
     }
 
+    system_time += (context_switch / 2);
+    cout << "time " << system_time << "ms: Simulator ended for FCFS [Q empty]" << endl;
+
 }
+
 
 void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
     queue<Process> ready;
     bool running = false;
     int system_time = 0; //keeps track of the current timestamp
 
-    cout << "time " << system_time << "ms: Simulator started for FCFS [Q empty]" << endl;
+    cout << "time " << system_time << "ms: Simulator started for RR [Q empty]" << endl;
 
     while (!tasks.empty() || !ready.empty()){
         //if nothing running, or no tasks to be done, and there are tasks that are ready
@@ -400,7 +412,7 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
         //if arrived, add to ready queue
         if (curr.process_state == 0){
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " arrived; added to the ready queue ";
+            cout << "time " << system_time << "ms: Process " << curr.name << " arrived; added to ready queue ";
 
             ready.push(curr);
 
@@ -409,12 +421,22 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
 
         //if finished cpu burst, move to io burst time
         else if (curr.process_state == 1){
+            running = false;
+
             if (curr.burst_times[curr.index].second == -1){
                 cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
                 continue;
             }
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; " << curr.burst_times.size() - curr.index - 1<< " bursts to go " << queueState(ready) << endl;
+            cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; ";
+            cout << curr.burst_times.size() - curr.index - 1;
+            if (curr.burst_times.size() - curr.index - 1 == 1){
+                cout << " burst to go ";
+            }
+            else {
+                cout << " bursts to go ";
+            }
+            cout << queueState(ready) << endl;
 
             curr.time += curr.burst_times[curr.index].second + (context_switch / 2);
             curr.process_state = 2;
@@ -423,8 +445,6 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
             cout << "time " << system_time << "ms: Process " << curr.name << " switching out of CPU; blocking on I/O until time " << curr.time << "ms " << queueState(ready) << endl;
 
             system_time += (context_switch / 2);
-
-            running = false;
         }
 
         //if finished io burst, add to ready queue
@@ -439,5 +459,8 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
         }
 
     }
+
+    system_time += (context_switch / 2);
+    cout << "time " << system_time << "ms: Simulator ended for RR [Q empty]" << endl;
 
 }
