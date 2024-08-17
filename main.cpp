@@ -338,6 +338,11 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
 
             if (curr.burst_times[curr.index].second == -1){
                 cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
+                //reset variables
+                curr.index = 0;
+                //curr.time = original arrival time
+                continue;
+
                 continue;
             }
 
@@ -425,7 +430,6 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
 
             if (curr.burst_times[curr.index].second == -1){
                 cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
-                continue;
             }
 
             cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; ";
@@ -462,5 +466,7 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
 
     system_time += (context_switch / 2);
     cout << "time " << system_time << "ms: Simulator ended for RR [Q empty]" << endl;
+
+
 
 }
