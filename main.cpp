@@ -44,8 +44,9 @@ public:
     }
 };
 
-void fcfs(priority_queue<Process, vector<Process>, Compare> &tasks);
+void fcfs(priority_queue<Process, vector<Process>, Compare> tasks);
 
+void sjf(priority_queue<Process, vector<Process>, Compare> tasks);
 
 
 
@@ -270,7 +271,7 @@ int main(int argc, char** argv) {
     close(fd);
 
     fcfs(tasks);
-
+    sjf(tasks);
     return EXIT_SUCCESS;
 }
 
@@ -314,7 +315,7 @@ string queueState(priority_queue<Process, vector<Process>, CompareSJF>& ready){
     return queue_state;
 }
 
-void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
+void fcfs(priority_queue<Process, vector<Process>, Compare> tasks){
     queue<Process> ready;
     bool running = false;
     int system_time = 0; //keeps track of the current timestamp
@@ -401,12 +402,12 @@ void fcfs(priority_queue<Process, vector<Process>, Compare>& tasks){
 }
 
 
-void sjf(priority_queue<Process, vector<Process>, Compare>& tasks){
+void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
     priority_queue<Process, vector<Process>, CompareSJF> ready;
     bool running = false;
     int system_time = 0; //keeps track of the current timestamp
 
-    cout << "time " << system_time << "ms: Simulator started for FCFS [Q empty]" << endl;
+    cout << "time " << system_time << "ms: Simulator started for SJF [Q empty]" << endl;
 
     while (!tasks.empty() || !ready.empty()){
         //if nothing running, or no tasks to be done, and there are tasks that are ready
@@ -483,7 +484,7 @@ void sjf(priority_queue<Process, vector<Process>, Compare>& tasks){
     }
 
     system_time += (context_switch / 2);
-    cout << "time " << system_time << "ms: Simulator ended for FCFS [Q empty]" << endl;
+    cout << "time " << system_time << "ms: Simulator ended for SJF [Q empty]" << endl;
 
 }
 
