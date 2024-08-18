@@ -530,7 +530,11 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
                 cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for remaining " << curr.burst_times[curr.index].first << "ms of " << curr.original_cpu_burst_time << "ms burst " << queueState(ready) << endl;
             }
             else {
+<<<<<<< HEAD
                 system_time -= (context_switch / 2);
+=======
+                cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for remaining " << curr.burst_times[curr.index].first << "ms of " << curr.original_cpu_burst_time << "ms burst " << queueState(ready) << endl;
+>>>>>>> 9cc52d4aed74201d3e54cdc1ee826856dca434f8
             }
 
             if (curr.burst_times[curr.index].first - time_slice < 0){
