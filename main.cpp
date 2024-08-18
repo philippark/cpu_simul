@@ -3,9 +3,11 @@
 
 using namespace std;
 
+
+// global variables that need to be turned into arguments 
 int context_switch = 4;
 int time_slice = 256;   
-
+double alpha = .75;
 /*
 class process:
     - [ [cpu, io], [cpu, io], ... ]
@@ -21,10 +23,11 @@ class process:
 class Process{
 	public:
 		vector<pair<int, int>> burst_times; 
-        int index = 0;
+        	int index = 0;
 		string name;
 		int time;
 		short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst;
+		double tau;
 	
 };
 
@@ -40,7 +43,7 @@ class CompareSJF{
 public:
     bool operator() (Process p1, Process p2)
     {
-        return p1.burst_times[p1.index] > p2.burst_times[p2.index];
+        return p1.tau > p2.tau;
     }
 };
 
@@ -163,6 +166,7 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < n; i++) { // loop through all processes
         Process process;
+	process.tau = 1.0 / lambda;
 	    //vector<pair<int,int>> burst_times;
         int arrival_time = std::floor(next_exp(lambda, upper_bound));
         int num_cpu_bursts = std::ceil(drand48() * 32);
@@ -373,7 +377,6 @@ void fcfs(priority_queue<Process, vector<Process>, Compare> tasks){
                 cout << " bursts to go ";
             }
             cout << queueState(ready) << endl;
-
             curr.time += curr.burst_times[curr.index].second + (context_switch / 2);
             curr.process_state = 2;
             tasks.push(curr);
@@ -408,7 +411,7 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
     int system_time = 0; //keeps track of the current timestamp
 
     cout << "time " << system_time << "ms: Simulator started for SJF [Q empty]" << endl;
-
+    // tau_i+1 = ceil(alpha * t_actual + (1-alpha) * tau_i
     while (!tasks.empty() || !ready.empty()){
         //if nothing running, or no tasks to be done, and there are tasks that are ready
         //grab next in ready, calculate its cpu burst finish time, and add to tasks
@@ -418,7 +421,7 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
 
             system_time += (context_switch / 2);
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for " << curr.burst_times[curr.index].first << "ms burst " << queueState(ready) << endl;
+            cout << "time " << system_time << "ms: Process " << curr.name << " (tau " << curr.tau << "ms) started using the CPU for " << curr.burst_times[curr.index].first << "ms burst " << queueState(ready) << endl;
 
             curr.time = system_time + curr.burst_times[curr.index].first;
             curr.process_state = 1;
@@ -435,7 +438,7 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
         //if arrived, add to ready queue
         if (curr.process_state == 0){
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " arrived; added to ready queue ";
+            cout << "time " << system_time << "ms: Process " << curr.name << " (tau " << curr.tau << "ms) arrived; added to ready queue ";
 
             ready.push(curr);
 
@@ -447,11 +450,11 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
             running = false;
 
             if (curr.burst_times[curr.index].second == -1){
-                cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
+                cout << "time " << system_time << "ms: Process " << curr.name << " (tau " << curr.tau << "ms) terminated " << queueState(ready) << endl;
                 continue;
             }
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; ";
+            cout << "time " << system_time << "ms: Process " << curr.name << " (tau " << curr.tau << "ms) completed a CPU burst; ";
             cout << curr.burst_times.size() - curr.index - 1;
             if (curr.burst_times.size() - curr.index - 1 == 1){
                 cout << " burst to go ";
@@ -460,7 +463,10 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
                 cout << " bursts to go ";
             }
             cout << queueState(ready) << endl;
-
+	    double new_tau = ceil(alpha * curr.burst_times[curr.index].first + (1.0 - alpha) * curr.tau);
+	    cout << "time " << system_time << "ms: Recalculated tau for process " << curr.name <<": old tau " << curr.tau <<"ms ==> new tau "<< new_tau <<"ms "; 
+	    curr.tau = new_tau;
+            cout << queueState(ready) << endl;
             curr.time += curr.burst_times[curr.index].second + (context_switch / 2);
             curr.process_state = 2;
             tasks.push(curr);
@@ -472,7 +478,7 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
 
         //if finished io burst, add to ready queue
         else if (curr.process_state == 2){
-            cout << "time " << system_time << "ms: Process " << curr.name << " completed I/O; added to ready queue ";
+            cout << "time " << system_time << "ms: Process " << curr.name << " (tau " << curr.tau << "ms) completed I/O; added to ready queue ";
 
             curr.index++;
             
