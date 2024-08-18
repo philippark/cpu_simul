@@ -299,7 +299,7 @@ string queueState(queue<Process> &ready){
     return queue_state;
 }
 
-string queueState(priority_queue<Process, vector<Process>, CompareSJF>& ready){
+string queueState(priority_queue<Process, vector<Process>, CompareSJF> ready){
     string queue_state = "[Q";
 
     int size = ready.size();
@@ -311,7 +311,6 @@ string queueState(priority_queue<Process, vector<Process>, CompareSJF>& ready){
         Process temp = ready.top();
         queue_state += " " + temp.name;
         ready.pop();
-        ready.push(temp);
     }
 
     queue_state += "]";
@@ -450,7 +449,7 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
             running = false;
 
             if (curr.burst_times[curr.index].second == -1){
-                cout << "time " << system_time << "ms: Process " << curr.name << " (tau " << curr.tau << "ms) terminated " << queueState(ready) << endl;
+                cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
                 continue;
             }
 
