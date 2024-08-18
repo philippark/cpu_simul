@@ -87,3 +87,8 @@ grab next in ready:
 
 
 do time slice until ready is not empty
+
+
+
+add time slice anyways?
+if task is time slice, and queue is empty, then treat it like it never preempted? (subtract context switch?)
