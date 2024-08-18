@@ -526,7 +526,7 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
                 cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for " << curr.burst_times[curr.index].first << "ms burst " << queueState(ready) << endl;
             }
             else {
-                cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for remaining " << curr.burst_times[curr.index].first << "ms of " << curr.original_cpu_burst_time << "ms burst" << queueState(ready) << endl;
+                cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for remaining " << curr.burst_times[curr.index].first << "ms of " << curr.original_cpu_burst_time << "ms burst " << queueState(ready) << endl;
             }
 
             if (curr.burst_times[curr.index].first - time_slice < 0){
