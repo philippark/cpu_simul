@@ -23,11 +23,12 @@ class process:
 class Process{
 	public:
 		vector<pair<int, int>> burst_times; 
-        	int index = 0;
+        int index = 0;
 		string name;
 		int time;
 		short process_state; // 0 is arrival; 1 is just finished cpu burst; 2 just finished io burst;
 		double tau;
+        int original_cpu_burst_time = -1;
 	
 };
 
@@ -51,6 +52,7 @@ void fcfs(priority_queue<Process, vector<Process>, Compare> tasks);
 
 void sjf(priority_queue<Process, vector<Process>, Compare> tasks);
 
+void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks);
 
 
 float next_exp(float lambda, float upper_bound) {
@@ -274,8 +276,9 @@ int main(int argc, char** argv) {
     dprintf(fd, "-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
     close(fd);
 
-    fcfs(tasks);
-    sjf(tasks);
+    //fcfs(tasks);
+    //sjf(tasks);
+    round_robin(tasks);
     return EXIT_SUCCESS;
 }
 
@@ -514,14 +517,31 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
             ready.pop();
 
             system_time += (context_switch / 2);
+        
+            if (curr.original_cpu_burst_time == -1){
+                curr.original_cpu_burst_time = curr.burst_times[curr.index].first;
+            }
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for " << curr.burst_times[curr.index].first << "ms burst " << queueState(ready) << endl;
+            if (curr.burst_times[curr.index].first == curr.original_cpu_burst_time){
+                cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for " << curr.burst_times[curr.index].first << "ms burst " << queueState(ready) << endl;
+            }
+            else {
+                cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for remaining " << curr.burst_times[curr.index].first << "ms of " << curr.original_cpu_burst_time << "ms burst" << queueState(ready) << endl;
+            }
 
-            curr.time = system_time + curr.burst_times[curr.index].first;
+            if (curr.burst_times[curr.index].first - time_slice < 0){
+                curr.time = system_time + curr.burst_times[curr.index].first;
+                curr.burst_times[curr.index].first = 0;
+            }
+            else {
+                curr.burst_times[curr.index].first -= time_slice;
+                curr.time = system_time + time_slice;
+            }
+
+
+
             curr.process_state = 1;
-
             tasks.push(curr);
-
             running = true;
         }
 
@@ -545,23 +565,35 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
 
             if (curr.burst_times[curr.index].second == -1){
                 cout << "time " << system_time << "ms: Process " << curr.name << " terminated " << queueState(ready) << endl;
+                continue;
             }
 
-            cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; ";
-            cout << curr.burst_times.size() - curr.index - 1;
-            if (curr.burst_times.size() - curr.index - 1 == 1){
-                cout << " burst to go ";
+            //no more remaining time
+            if (curr.burst_times[curr.index].first == 0) {
+
+                cout << "time " << system_time << "ms: Process " << curr.name << " completed a CPU burst; ";
+                cout << curr.burst_times.size() - curr.index - 1;
+                if (curr.burst_times.size() - curr.index - 1 == 1){
+                    cout << " burst to go ";
+                }
+                else {
+                    cout << " bursts to go ";
+                }
+                cout << queueState(ready) << endl;
+                curr.time += curr.burst_times[curr.index].second + (context_switch / 2);
+                curr.process_state = 2;
+                tasks.push(curr);
+
+                cout << "time " << system_time << "ms: Process " << curr.name << " switching out of CPU; blocking on I/O until time " << curr.time << "ms " << queueState(ready) << endl;
+
             }
+
             else {
-                cout << " bursts to go ";
+
+                cout << "time " << system_time << "ms: Time slice expired; preempting process " << curr.name << " with " << curr.burst_times[curr.index].first << "ms remaining " << queueState(ready) << endl;
+                
+                ready.push(curr);
             }
-            cout << queueState(ready) << endl;
-
-            curr.time += curr.burst_times[curr.index].second + (context_switch / 2);
-            curr.process_state = 2;
-            tasks.push(curr);
-
-            cout << "time " << system_time << "ms: Process " << curr.name << " switching out of CPU; blocking on I/O until time " << curr.time << "ms " << queueState(ready) << endl;
 
             system_time += (context_switch / 2);
         }

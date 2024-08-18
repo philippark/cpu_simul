@@ -1,0 +1,89 @@
+not running, grab next to run in ready:
+    calculate cpu burst time after time slice
+    if (cpu burst time - time_slice < 0){
+        curr.time = system_time + cpu burst time
+        cpu burst time = 0
+    }
+    else {
+        cpu burst time -= time slice
+        curr.time = system_time + time_slice
+    }
+
+    print
+    
+
+cpu finished:
+    if cpu burst time is not 0:
+        calculate next time slice finish time
+        if (cpu burst time - time_slice < 0){
+            curr.time = system_time + cpu burst time
+            cpu burst time = 0
+        }
+        else {
+            cpu burst time -= time slice
+            curr.time = system_time + time_slice
+        }
+
+        add to ready
+
+    if cpu burst time is 0, switch to io (regular cpu finish)
+
+
+    ->
+
+    while cpu burst time is not 0
+        if (cpu burst time - time_slice < 0){
+            curr.time = system_time + cpu burst time
+            cpu burst time = 0
+            print
+        }
+        else {
+            cpu burst time -= time slice
+            curr.time = system_time + time_slice
+            print
+        }
+
+        if (ready empty) continue
+
+        if cpu burst time is not 0
+            add to ready
+        break
+
+    if cpu burst time is 0:
+        switch to io
+
+
+
+cpu finished:
+
+if no more remaining time:
+    completed cpu 
+    switching to io
+else 
+    caclaulate next slice
+
+io finished:
+    no change?
+
+arrived:
+    no change
+
+
+
+time 841ms: Process A0 started using the CPU for remaining 1192ms of 1448ms burst [Q A2 A1]
+- store original, compare
+
+
+
+grab next in ready:
+    if original == -1, set original to cpu burst time
+
+    if not equal to original:
+        started using for remaining of original
+    else:
+        started using the CPU 
+
+
+
+
+do time slice until ready is not empty
