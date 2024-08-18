@@ -8,6 +8,7 @@ using namespace std;
 int context_switch = 4;
 int time_slice = 256;   
 double alpha = .75;
+int fd;
 /*
 class process:
     - [ [cpu, io], [cpu, io], ... ]
@@ -53,14 +54,14 @@ void fcfs(priority_queue<Process, vector<Process>, Compare> tasks);
 
 void sjf(priority_queue<Process, vector<Process>, Compare> tasks);
 
-void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks);
+void round_robin(priority_queue<Process, vector<Process>, Compare> tasks);
 
 
-float next_exp(float lambda, float upper_bound) {
-    float x = -1;
+double next_exp(double lambda, double upper_bound) {
+    double x = -1;
 
     while (x < 0 || std::ceil(x) > upper_bound) {
-        float r = drand48();
+        double r = drand48();
         x = -std::log(r) / lambda;
     }
 
@@ -69,7 +70,7 @@ float next_exp(float lambda, float upper_bound) {
 
 int main(int argc, char** argv) {
     /* Parse argument input */
-    if (argc != 6) {
+    if (argc != 9) {
         std::cerr << "ERROR: Non-valid arguments" << std::endl;
         return EXIT_FAILURE;
     }
@@ -113,7 +114,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    float lambda = std::strtod(argv[4], &e);
+    double lambda = std::strtod(argv[4], &e);
     if (*e != '\0' || errno != 0) {
         std::cerr << "ERROR: Failed to get lambda" << std::endl;
         return EXIT_FAILURE;
@@ -129,6 +130,37 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    context_switch = strtol(*(argv+6), &e, 10);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get context_switch" << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (context_switch < 0 || context_switch % 2 != 0) {
+        std::cerr << "ERROR: context_switch must be a positive even interger\n" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    alpha = strtod(*(argv+7), &e);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get alpha\n" << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (alpha < 0 || alpha > 1){
+        std::cerr << "ERROR: alpha must be between 0 and 1\n" << endl;
+        return EXIT_FAILURE;
+    }
+
+    time_slice = strtol(*(argv+8), &e, 10);
+    if (*e != '\0' || errno != 0) {
+        std::cerr << "ERROR: Failed to get time_slice\n" << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (time_slice < 0){
+        cerr << "ERROR: Time_slice must be a positive integer\n" << endl;
+        return EXIT_FAILURE;
+    }
+
+
     /* Print heading */
     std::cout << "<<< PROJECT PART I" << std::endl;
     std::cout << "<<< -- process set (n=" << n << ") with ";
@@ -137,8 +169,7 @@ int main(int argc, char** argv) {
     } else {
         std::cout << n_cpu << " CPU-bound processes" << std::endl;
     }
-    std::cout << "<<< -- seed=" << seed << "; lambda=" << lambda << "; bound=" << upper_bound << std::endl;
-
+    std::cout << "<<< -- seed=" << seed << "; lambda=" << std::fixed << std::setprecision(6) << lambda << "; bound=" << upper_bound<< std::endl;
     /* Initialize variables */
     srand48(seed);
 
@@ -146,22 +177,22 @@ int main(int argc, char** argv) {
     int alphabet_position = 0;
     int process_count = 0;
 
-    float sum_cpu_burst_time = 0;
+    double sum_cpu_burst_time = 0;
     int num_cpu_burst_time = 0;
 
-    float sum_io_burst_time = 0;
+    double sum_io_burst_time = 0;
     int num_io_burst_time = 0;
 
-    float cpu_bound_sum_cpu_burst_time = 0;
+    double cpu_bound_sum_cpu_burst_time = 0;
     int cpu_bound_num_cpu_burst_time = 0;
 
-    float cpu_bound_sum_io_burst_time = 0;
+    double cpu_bound_sum_io_burst_time = 0;
     int cpu_bound_num_io_burst_time = 0;
 
-    float io_bound_sum_cpu_burst_time = 0;
+    double io_bound_sum_cpu_burst_time = 0;
     int io_bound_num_cpu_burst_time = 0;
 
-    float io_bound_sum_io_burst_time = 0;
+    double io_bound_sum_io_burst_time = 0;
     int io_bound_num_io_burst_time = 0;
     //vector for processes for use in part 2 algorithms
     //priority_queue<Process, vector<Process>, Compare> tasks; 
@@ -196,9 +227,9 @@ int main(int argc, char** argv) {
         process.process_state = 0;
 
         if (num_cpu_bursts == 1) {
-            std::cout << num_cpu_bursts << " CPU burst:" << std::endl;
+            std::cout << num_cpu_bursts << " CPU burst" << std::endl;
         } else {
-            std::cout << num_cpu_bursts << " CPU bursts:" << std::endl;
+            std::cout << num_cpu_bursts << " CPU bursts" << std::endl;
         }
 
         process_count++;
@@ -235,36 +266,30 @@ int main(int argc, char** argv) {
             
             // If last CPU burst, only print CPU burst.
             if (j == num_cpu_bursts - 1) {
-                std::cout << "==> CPU burst " << cpu_burst_time << "ms" << std::endl;
                 process.burst_times.push_back({cpu_burst_time, -1});
                 break;
             }
-            
-            std::cout << "==> CPU burst " << cpu_burst_time << "ms ==> I/O burst " << io_burst_time << "ms" << std::endl;
+        
             process.burst_times.push_back({cpu_burst_time, io_burst_time});
         }
 
-        //Test output to see if matches
-        cout << process.name << " " << process.process_state << " " << endl;
-        for (int i = 0; i < process.burst_times.size(); i++){
-            cout << process.burst_times[i].first << " " << process.burst_times[i].second << endl;
-        }
         tasks.push(process);
     }
+    cout << endl;
 
     /* Output statistics to simout.txt */
-    int fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
+    fd = open("simout.txt", O_WRONLY | O_CREAT | O_TRUNC, 0660);
     if (fd == -1) {
         std::cerr << "ERROR: open() failed" << std::endl;
         return EXIT_FAILURE;
     }
 
-    float avg_cpu_burst_time = num_cpu_burst_time ? (std::ceil((sum_cpu_burst_time * 1000.0) / num_cpu_burst_time) / 1000.0) : 0.f;
-    float avg_io_burst_time = num_io_burst_time ? (std::ceil((sum_io_burst_time * 1000.0) / num_io_burst_time) / 1000.0) : 0.f;
-    float cpu_bound_avg_cpu_burst_time = cpu_bound_num_cpu_burst_time ? (std::ceil((cpu_bound_sum_cpu_burst_time * 1000.0) / cpu_bound_num_cpu_burst_time) / 1000.0) : 0.f;
-    float cpu_bound_avg_io_burst_time = cpu_bound_num_io_burst_time ? (std::ceil((cpu_bound_sum_io_burst_time * 1000.0) / cpu_bound_num_io_burst_time) / 1000.0) : 0.f;
-    float io_bound_avg_cpu_burst_time = io_bound_num_cpu_burst_time ? (std::ceil((io_bound_sum_cpu_burst_time * 1000.0) / io_bound_num_cpu_burst_time) / 1000.0) : 0.f;
-    float io_bound_avg_io_burst_time = io_bound_num_io_burst_time ? (std::ceil((io_bound_sum_io_burst_time * 1000.0) / io_bound_num_io_burst_time) / 1000.0) : 0.f;
+    double avg_cpu_burst_time = num_cpu_burst_time ? (std::ceil((sum_cpu_burst_time * 1000.0) / num_cpu_burst_time) / 1000.0) : 0.f;
+    double avg_io_burst_time = num_io_burst_time ? (std::ceil((sum_io_burst_time * 1000.0) / num_io_burst_time) / 1000.0) : 0.f;
+    double cpu_bound_avg_cpu_burst_time = cpu_bound_num_cpu_burst_time ? (std::ceil((cpu_bound_sum_cpu_burst_time * 1000.0) / cpu_bound_num_cpu_burst_time) / 1000.0) : 0.f;
+    double cpu_bound_avg_io_burst_time = cpu_bound_num_io_burst_time ? (std::ceil((cpu_bound_sum_io_burst_time * 1000.0) / cpu_bound_num_io_burst_time) / 1000.0) : 0.f;
+    double io_bound_avg_cpu_burst_time = io_bound_num_cpu_burst_time ? (std::ceil((io_bound_sum_cpu_burst_time * 1000.0) / io_bound_num_cpu_burst_time) / 1000.0) : 0.f;
+    double io_bound_avg_io_burst_time = io_bound_num_io_burst_time ? (std::ceil((io_bound_sum_io_burst_time * 1000.0) / io_bound_num_io_burst_time) / 1000.0) : 0.f;
 
     dprintf(fd, "-- number of processes: %d\n", n);
     dprintf(fd, "-- number of CPU-bound processes: %d\n", n_cpu);
@@ -275,11 +300,16 @@ int main(int argc, char** argv) {
     dprintf(fd, "-- CPU-bound average I/O burst time: %.3f ms\n", cpu_bound_avg_io_burst_time);
     dprintf(fd, "-- I/O-bound average I/O burst time: %.3f ms\n", io_bound_avg_io_burst_time);
     dprintf(fd, "-- overall average I/O burst time: %.3f ms\n", avg_io_burst_time);
-    close(fd);
+    dprintf(fd, "\n");
+    
 
-    //fcfs(tasks);
-    //sjf(tasks);
+    cout << "<<< PROJECT PART II" << endl;
+    cout << "<<< -- t_cs=" << context_switch <<std::fixed << std::setprecision(2) << "ms; alpha=" << alpha << "; t_slice=" << time_slice << "ms" << std::fixed << std::setprecision(0) << endl;
+    fcfs(tasks);
+    sjf(tasks);
     round_robin(tasks);
+
+    close(fd);
     return EXIT_SUCCESS;
 }
 
@@ -409,6 +439,23 @@ void fcfs(priority_queue<Process, vector<Process>, Compare> tasks){
 
     system_time += (context_switch / 2);
     cout << "time " << system_time << "ms: Simulator ended for FCFS [Q empty]" << endl;
+    cout << endl;
+
+    dprintf(fd, "Algorithm FCFS\n");
+    dprintf(fd, "-- CPU utilization: \n");
+    dprintf(fd, "-- CPU-bound average wait time: \n");
+    dprintf(fd, "-- I/O-bound average wait time: \n");
+    dprintf(fd, "-- overall average wait time: \n");
+    dprintf(fd, "-- CPU-bound average turnaround time: \n");
+    dprintf(fd, "-- I/O-bound average turnaround time: \n");
+    dprintf(fd, "-- overall average turnaround time: \n");
+    dprintf(fd, "-- CPU-bound number of context switches: \n");
+    dprintf(fd, "-- I/O-bound number of context switches: \n");
+    dprintf(fd, "-- overall number of context switches: \n");
+    dprintf(fd, "-- CPU-bound number of preemptions: 0\n");
+    dprintf(fd, "-- I/O-bound number of preemptions: 0\n");
+    dprintf(fd, "-- overall number of preemptions: 0\n");
+    dprintf(fd, "\n");
 
 }
 
@@ -499,11 +546,27 @@ void sjf(priority_queue<Process, vector<Process>, Compare> tasks){
 
     system_time += (context_switch / 2);
     cout << "time " << system_time << "ms: Simulator ended for SJF [Q empty]" << endl;
+    cout << endl;
+
+    dprintf(fd, "Algorithm SJF\n");
+    dprintf(fd, "-- CPU utilization: \n");
+    dprintf(fd, "-- CPU-bound average wait time: \n");
+    dprintf(fd, "-- I/O-bound average wait time: \n");
+    dprintf(fd, "-- overall average wait time: \n");
+    dprintf(fd, "-- CPU-bound average turnaround time: \n");
+    dprintf(fd, "-- I/O-bound average turnaround time: \n");
+    dprintf(fd, "-- overall average turnaround time: \n");
+    dprintf(fd, "-- CPU-bound number of context switches: \n");
+    dprintf(fd, "-- I/O-bound number of context switches: \n");
+    dprintf(fd, "-- overall number of context switches: \n");
+    dprintf(fd, "-- CPU-bound number of preemptions: 0\n");
+    dprintf(fd, "-- I/O-bound number of preemptions: 0\n");
+    dprintf(fd, "-- overall number of preemptions: 0\n");
+    dprintf(fd, "\n");
 
 }
 
-
-void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
+void round_robin(priority_queue<Process, vector<Process>, Compare> tasks){
     queue<Process> ready;
     bool running = false;
     int system_time = 0; //keeps track of the current timestamp
@@ -531,14 +594,13 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
             }
             else {
                 system_time -= (context_switch / 2);
-                cout << "time " << system_time << "ms: Process " << curr.name << " started using the CPU for remaining " << curr.burst_times[curr.index].first << "ms of " << curr.original_cpu_burst_time << "ms burst " << queueState(ready) << endl;
             }
 
             if (curr.burst_times[curr.index].first - time_slice < 0){
                 curr.time = system_time + curr.burst_times[curr.index].first;
                 curr.burst_times[curr.index].first = 0;
             }
-	    else {
+            else {
                 curr.burst_times[curr.index].first -= time_slice;
                 curr.time = system_time + time_slice;
             }
@@ -627,7 +689,24 @@ void round_robin(priority_queue<Process, vector<Process>, Compare>& tasks){
     }
 
     cout << "time " << system_time << "ms: Simulator ended for RR [Q empty]" << endl;
+    cout << endl;
 
+    dprintf(fd, "Algorithm RR\n");
+    dprintf(fd, "-- CPU utilization: \n");
+    dprintf(fd, "-- CPU-bound average wait time: \n");
+    dprintf(fd, "-- I/O-bound average wait time: \n");
+    dprintf(fd, "-- overall average wait time: \n");
+    dprintf(fd, "-- CPU-bound average turnaround time: \n");
+    dprintf(fd, "-- I/O-bound average turnaround time: \n");
+    dprintf(fd, "-- overall average turnaround time: \n");
+    dprintf(fd, "-- CPU-bound number of context switches: \n");
+    dprintf(fd, "-- I/O-bound number of context switches: \n");
+    dprintf(fd, "-- overall number of context switches: \n");
+    dprintf(fd, "-- CPU-bound number of preemptions: 0\n");
+    dprintf(fd, "-- I/O-bound number of preemptions: 0\n");
+    dprintf(fd, "-- overall number of preemptions: 0\n");
+    dprintf(fd, "\n");
 
 
 }
+
